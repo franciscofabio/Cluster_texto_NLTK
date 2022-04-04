@@ -14,7 +14,7 @@ library(topicmodels)
 
 setwd("~/POS-GRADUACAO/CIENCIA DE DADOS(REMOTO)/MOD-5/EADP222_Softwares_para_uso_em_Ciência_de_Dados_III/Atividade Final/cluster_texto_R")
 comentarios <- read.csv("../magalu_2022_n/tweets.csv", sep = ",", header = TRUE, encoding = "UTF-8")
-View(comentarios)
+View(comentarios['tweet'])
 
 docs <- Corpus(VectorSource(comentarios$tweet))
 
@@ -52,7 +52,7 @@ freq <- colSums(as.matrix(dtm.word.full))
 ord <- order(freq, decreasing = T)
 freq[ord[1:50]]
 
-exclui <- c("tco", "https", "pra", "vai", "ser", "t?", "a?")
+exclui <- c("http", "https", "pra", "vai", "ser", "t?", "a?")
 
 docs <- tm_map(docs, removeWords, exclui)
 
@@ -80,8 +80,21 @@ m_tfidf <- as.matrix(dtm_tfidf)
 
 fviz_nbclust(m_tfidf, kmeans, method = "wss")
 
+#numero de cluster
+install.packages("NbClust",dependencies = TRUE)
+library(NbClust)
+nb <- NbClust(m_tfidf, diss=NULL, distance = "euclidean", 
+              min.nc=2, max.nc=5, method = "kmeans", 
+              index = "all", alphaBeale = 0.1)
+hist(nb$Best.nc[1,], breaks = max(na.omit(nb$Best.nc[1,])))
+
+#Mais teste para definir n de cluster
+fviz_nbclust(m_tfidf, kmeans, nstart = 25,  method = "gap_stat", nboot = 50)+
+  labs(subtitle = "Gap statistic method")
+
+
 #Kmeans
-k <- 6 
+k <- 6
 set.seed(123)
 kmeansResult_tfidf <- kmeans(m_tfidf, k, nstart = 10) 
 
@@ -124,7 +137,8 @@ dtm.word.full %>%
             ., 
             max.words = 40, 
             colors = brewer.pal(3, "Dark2"))
-#nuvem de palavras do cluster 
+
+#nuvem de palavras do cluster 3
 set.seed(42)
 dtm.word.full %>%
   as.matrix() %>%
@@ -168,6 +182,8 @@ dtm.word.full %>%
             max.words = 70, 
             colors = brewer.pal(3, "Dark2"))
 
+
+
 docs[kmeansResult_tfidf$cluster==6]%>%
   .[10] %>%
   inspect()
@@ -180,4 +196,4 @@ set.seed(12345)
 fcm_select(co_matriz, pattern = co_temos) %>%
   textplot_network()
 
-findAssocs(dtm.word.full, c("oferta", "atendimento", "promoção", "magazine", "caro", "ouvidoria", "ruim"), 0.2)
+findAssocs(dtm.word.full, c("anita", "cancelei","atendimento", "promoção", "desconto", "compra", "ouvidoria", "ruim","venda","entrega"), 0.2)
